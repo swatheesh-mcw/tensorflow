@@ -25,6 +25,7 @@ limitations under the License.
 #include "tensorflow/lite/kernels/internal/tensor_ctypes.h"
 #include "tensorflow/lite/kernels/internal/types.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
+#include "Eigen/Core"
 
 #ifdef TFLITE_KERNEL_USE_XNNPACK
 #include <algorithm>
@@ -243,6 +244,12 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
       break;
     case kTfLiteInt16:
       TFLiteOperation<kernel_type, int16_t, OpType>(context, node, op_context);
+      break;
+    case kTfLiteFloat16:
+      TFLiteOperation<kernel_type, Eigen::half, OpType>(context, node, op_context);
+      break;
+    case kTfLiteBFloat16:
+      TFLiteOperation<kernel_type, Eigen::bfloat16, OpType>(context, node, op_context);
       break;
     default:
       TF_LITE_KERNEL_LOG(context,
