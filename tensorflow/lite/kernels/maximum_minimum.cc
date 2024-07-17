@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <stdint.h>
 
+#include "Eigen/Core"
 #include "tensorflow/lite/core/c/common.h"
 #include "tensorflow/lite/kernels/internal/compatibility.h"
 #include "tensorflow/lite/kernels/internal/optimized/optimized_ops.h"
@@ -25,7 +26,6 @@ limitations under the License.
 #include "tensorflow/lite/kernels/internal/tensor_ctypes.h"
 #include "tensorflow/lite/kernels/internal/types.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
-#include "Eigen/Core"
 
 #ifdef TFLITE_KERNEL_USE_XNNPACK
 #include <algorithm>
