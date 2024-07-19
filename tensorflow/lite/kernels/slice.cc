@@ -254,6 +254,12 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
     case kTfLiteString:
       TF_LITE_SLICE(string);
       break;
+    case kTfLiteFloat16:
+      TF_LITE_SLICE(Eigen::half);
+      break;
+    case kTfLiteBFloat16:
+      TF_LITE_SLICE(Eigen::bfloat16);
+      break;
     default:
       TF_LITE_KERNEL_LOG(
           context, "Type %d is currently not supported by Slice.", input->type);
