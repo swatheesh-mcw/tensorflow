@@ -45,7 +45,9 @@ struct OpData {
 template <typename T>
 TfLiteStatus GetSize(TfLiteContext* context, T start, T limit, T delta,
                      int* size) {
-  TF_LITE_ENSURE(context, !std::equal_to<T>()(delta, 0));
+  // TF_LITE_ENSURE(context, !std::equal_to<T>()(delta, 0)); // std::equal_to
+  // does not support float16 and bfloat16
+  TF_LITE_ENSURE(context, !(delta == 0));
   TF_LITE_ENSURE(
       context, (start >= limit && delta < 0) || (start <= limit && delta > 0));
   *size =
@@ -79,6 +81,33 @@ TfLiteStatus ResizeOutput(TfLiteContext* context, const TfLiteTensor* start,
       TF_LITE_ENSURE_OK(context, GetSize(context, *GetTensorData<float>(start),
                                          *GetTensorData<float>(limit),
                                          *GetTensorData<float>(delta), &size));
+      break;
+    }
+    case kTfLiteInt8: {
+      TF_LITE_ENSURE_OK(context, GetSize(context, *GetTensorData<int8_t>(start),
+                                         *GetTensorData<int8_t>(limit),
+                                         *GetTensorData<int8_t>(delta), &size));
+      break;
+    }
+    case kTfLiteInt16: {
+      TF_LITE_ENSURE_OK(context,
+                        GetSize(context, *GetTensorData<int16_t>(start),
+                                *GetTensorData<int16_t>(limit),
+                                *GetTensorData<int16_t>(delta), &size));
+      break;
+    }
+    case kTfLiteFloat16: {
+      TF_LITE_ENSURE_OK(context,
+                        GetSize(context, *GetTensorData<Eigen::half>(start),
+                                *GetTensorData<Eigen::half>(limit),
+                                *GetTensorData<Eigen::half>(delta), &size));
+      break;
+    }
+    case kTfLiteBFloat16: {
+      TF_LITE_ENSURE_OK(context,
+                        GetSize(context, *GetTensorData<Eigen::bfloat16>(start),
+                                *GetTensorData<Eigen::bfloat16>(limit),
+                                *GetTensorData<Eigen::bfloat16>(delta), &size));
       break;
     }
     default: {
@@ -120,6 +149,22 @@ TfLiteStatus EvalImpl(TfLiteContext* context, const TfLiteTensor* start,
       CalculateRange<int64_t>(start, delta, output);
       break;
     }
+    case kTfLiteInt8: {
+      CalculateRange<int8_t>(start, delta, output);
+      break;
+    }
+    case kTfLiteInt16: {
+      CalculateRange<int16_t>(start, delta, output);
+      break;
+    }
+    case kTfLiteFloat16: {
+      CalculateRange<Eigen::half>(start, delta, output);
+      break;
+    }
+    case kTfLiteBFloat16: {
+      CalculateRange<Eigen::bfloat16>(start, delta, output);
+      break;
+    }
     default: {
       TF_LITE_KERNEL_LOG(context, "Unsupported data type: %d", output->type);
       return kTfLiteError;
@@ -149,7 +194,9 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   // TODO(b/117912892): Support quantization as well.
   const auto dtype = start->type;
   if (dtype != kTfLiteFloat32 && dtype != kTfLiteInt32 &&
-      dtype != kTfLiteInt64) {
+      dtype != kTfLiteInt64 && dtype != kTfLiteInt8 &&
+      dtype != kTfLiteFloat16 && dtype != kTfLiteBFloat16 &&
+      dtype != kTfLiteInt16) {
     TF_LITE_KERNEL_LOG(context, "Unknown index output data type: %s",
                        TfLiteTypeGetName(dtype));
     return kTfLiteError;

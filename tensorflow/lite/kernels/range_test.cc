@@ -12,11 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
+#include <gtest/gtest.h>
 #include <stdint.h>
 
 #include <vector>
 
-#include <gtest/gtest.h>
 #include "tensorflow/lite/kernels/test_util.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
@@ -246,6 +246,114 @@ TEST(RangeOpModel, Int64EmptyOutput) {
 
 TEST(RangeOpModel, Int64EmptyOutputConst) {
   RangeOpModel<int64_t> model(TensorType_INT64, {0}, {0}, {1});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
+  EXPECT_THAT(model.GetOutput(), ElementsAre());
+}
+
+TEST(RangeOpModel, SimpleInt8) {
+  RangeOpModel<int8_t> model(TensorType_INT8);
+  model.PopulateTensor<int8_t>(model.start(), {0});
+  model.PopulateTensor<int8_t>(model.limit(), {4});
+  model.PopulateTensor<int8_t>(model.delta(), {1});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(0, 1, 2, 3));
+}
+
+TEST(RangeOpModel, SimpleInt16) {
+  RangeOpModel<int16_t> model(TensorType_INT16);
+  model.PopulateTensor<int16_t>(model.start(), {0});
+  model.PopulateTensor<int16_t>(model.limit(), {4});
+  model.PopulateTensor<int16_t>(model.delta(), {1});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(0, 1, 2, 3));
+}
+
+TEST(RangeOpModel, SimpleFloat16) {
+  RangeOpModel<Eigen::half> model(TensorType_FLOAT16);
+  model.PopulateTensor<Eigen::half>(model.start(), {Eigen::half(0)});
+  model.PopulateTensor<Eigen::half>(model.limit(), {Eigen::half(4)});
+  model.PopulateTensor<Eigen::half>(model.delta(), {Eigen::half(1)});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(Eigen::half(0), Eigen::half(1),
+                                             Eigen::half(2), Eigen::half(3)));
+}
+
+TEST(RangeOpModel, SimpleBFloat16) {
+  RangeOpModel<Eigen::bfloat16> model(TensorType_BFLOAT16);
+  model.PopulateTensor<Eigen::bfloat16>(model.start(), {Eigen::bfloat16(0)});
+  model.PopulateTensor<Eigen::bfloat16>(model.limit(), {Eigen::bfloat16(4)});
+  model.PopulateTensor<Eigen::bfloat16>(model.delta(), {Eigen::bfloat16(1)});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(),
+              ElementsAre(Eigen::bfloat16(0), Eigen::bfloat16(1),
+                          Eigen::bfloat16(2), Eigen::bfloat16(3)));
+}
+
+TEST(RangeOpModel, Int8DeltaGreaterThanOneConst) {
+  RangeOpModel<int8_t> model(TensorType_INT8, {2}, {9}, {2});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(2, 4, 6, 8));
+}
+
+TEST(RangeOpModel, Int16DeltaGreaterThanOneConst) {
+  RangeOpModel<int16_t> model(TensorType_INT16, {2}, {9}, {2});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(2, 4, 6, 8));
+}
+
+TEST(RangeOpModel, Float16DeltaGreaterThanOneConst) {
+  RangeOpModel<Eigen::half> model(TensorType_FLOAT16, {Eigen::half(2)},
+                                  {Eigen::half(9)}, {Eigen::half(2)});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(), ElementsAre(Eigen::half(2), Eigen::half(4),
+                                             Eigen::half(6), Eigen::half(8)));
+}
+
+TEST(RangeOpModel, BFloat16DeltaGreaterThanOneConst) {
+  RangeOpModel<Eigen::bfloat16> model(TensorType_BFLOAT16, {Eigen::bfloat16(2)},
+                                      {Eigen::bfloat16(9)},
+                                      {Eigen::bfloat16(2)});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
+  EXPECT_THAT(model.GetOutput(),
+              ElementsAre(Eigen::bfloat16(2), Eigen::bfloat16(4),
+                          Eigen::bfloat16(6), Eigen::bfloat16(8)));
+}
+
+TEST(RangeOpModel, Int8EmptyOutputConst) {
+  RangeOpModel<int8_t> model(TensorType_INT8, {0}, {0}, {1});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
+  EXPECT_THAT(model.GetOutput(), ElementsAre());
+}
+
+TEST(RangeOpModel, Int16EmptyOutputConst) {
+  RangeOpModel<int16_t> model(TensorType_INT16, {0}, {0}, {1});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
+  EXPECT_THAT(model.GetOutput(), ElementsAre());
+}
+
+TEST(RangeOpModel, Float16EmptyOutputConst) {
+  RangeOpModel<Eigen::half> model(TensorType_FLOAT16, {Eigen::half(0)},
+                                  {Eigen::half(0)}, {Eigen::half(1)});
+  ASSERT_EQ(model.Invoke(), kTfLiteOk);
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
+  EXPECT_THAT(model.GetOutput(), ElementsAre());
+}
+
+TEST(RangeOpModel, BFloat16EmptyOutputConst) {
+  RangeOpModel<Eigen::bfloat16> model(TensorType_BFLOAT16, {Eigen::bfloat16(0)},
+                                      {Eigen::bfloat16(0)},
+                                      {Eigen::bfloat16(1)});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
   EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
   EXPECT_THAT(model.GetOutput(), ElementsAre());
