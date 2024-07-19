@@ -245,9 +245,105 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
     case kTfLiteInt16:
       TFLiteOperation<kernel_type, int16_t, OpType>(context, node, op_context);
       break;
-    case kTfLiteFloat16:
+    case kTfLiteFloat16: {
+// #ifdef TFLITE_KERNEL_USE_XNNPACK
+//       size_t num_input1_dims = static_cast<size_t>(
+//           GetTensorShape(op_context.input1).DimensionsCount());
+//       size_t num_input2_dims = static_cast<size_t>(
+//           GetTensorShape(op_context.input2).DimensionsCount());
+//       if (std::max(num_input1_dims, num_input2_dims) < XNN_MAX_TENSOR_DIMS) {
+//         std::array<size_t, XNN_MAX_TENSOR_DIMS> input1_shape;
+//         std::array<size_t, XNN_MAX_TENSOR_DIMS> input2_shape;
+//         for (size_t i = 0; i < num_input1_dims; ++i) {
+//           input1_shape[i] = GetTensorShape(op_context.input1).Dims(i);
+//         }
+//         for (size_t i = 0; i < num_input2_dims; ++i) {
+//           input2_shape[i] = GetTensorShape(op_context.input2).Dims(i);
+//         }
+//         CpuBackendContext* cpu_backend_context =
+//             CpuBackendContext::GetFromContext(context);
+//         pthreadpool_t threadpool =
+//             cpu_backend_context->get_xnnpack_threadpool();
+//         enum xnn_status status = xnn_status_invalid_parameter;
+//         if (std::is_same<OpType, MaximumOp>::value) {
+//           const struct xnn_binary_elementwise_config* f16_vmax_config = xnn_init_f16_vmax_config();
+//           if (f16_vmax_config == NULL) {
+//             xnn_log_error("failed to create %s operator: unsupported hardware configuration",
+//               xnn_operator_type_to_string(xnn_operator_type_maximum_nd_f16));
+//             return xnn_status_unsupported_hardware;
+//           }
+
+//           union xnn_f16_default_params params;
+//           if (f16_vmax_config->init.f16_default != NULL) {
+//             f16_vmax_config->init.f16_default(&params);
+//           }
+
+//           const struct xnn_binary_elementwise_subconfig* binary_elementwise_subconfig = &f16_vmax_config->minmax;
+
+//           status =  run_binary_elementwise_nd(
+//             xnn_operator_type_maximum_nd_f16,
+//             num_input1_dims, input1_shape.data(),
+//             num_input2_dims, input2_shape.data(),
+//             GetTensorData<Eigen::half>(op_context.input1), GetTensorData<Eigen::half>(op_context.input2), GetTensorData<Eigen::half>(op_context.output),
+//             /*log2_element_size=*/XNN_LOG2_SIZEOF_HALF,
+//             offsetof(struct xnn_operator, params.f16_minmax), sizeof(params),
+//             offsetof(struct xnn_operator, params2.f16_minmax), sizeof(params),
+//             binary_elementwise_subconfig,
+//             &params,
+//             &params,
+//             sizeof(params),
+//             XNN_FLAG_YIELD_WORKERS,
+//             threadpool);
+//           if (status != xnn_status_success) {
+//             TFLITE_LOG(TFLITE_LOG_INFO,
+//                        "Failed to run xnn_run_maximum_nd_f16. Error code: %d",
+//                        status);
+//             TFLiteOperation<kernel_type, Eigen::half, OpType>(context, node,
+//                                                         op_context);
+//           }
+//         } else if (std::is_same<OpType, MinimumOp>::value) {
+//           const struct xnn_binary_elementwise_config* f16_vmin_config = xnn_init_f16_vmin_config();
+//           if (f16_vmin_config == NULL) {
+//             xnn_log_error("failed to create %s operator: unsupported hardware configuration",
+//               xnn_operator_type_to_string(xnn_operator_type_minimum_nd_f16));
+//             return xnn_status_unsupported_hardware;
+//           }
+
+//           union xnn_f16_default_params params;
+//           if (f16_vmax_config->init.f16_default != NULL) {
+//             f16_vmax_config->init.f16_default(&params);
+//           }
+
+//           const struct xnn_binary_elementwise_subconfig* binary_elementwise_subconfig = &f16_vmin_config->minmax;
+
+//           status =  run_binary_elementwise_nd(
+//             xnn_operator_type_minimum_nd_f16,
+//             num_input1_dims, input1_shape.data(),
+//             num_input2_dims, input2_shape.data(),
+//             GetTensorData<Eigen::half>(op_context.input1), GetTensorData<Eigen::half>(op_context.input2), GetTensorData<Eigen::half>(op_context.output),
+//             /*log2_element_size=*/XNN_LOG2_SIZEOF_HALF,
+//             offsetof(struct xnn_operator, params.f16_minmax), sizeof(params),
+//             offsetof(struct xnn_operator, params2.f16_minmax), sizeof(params),
+//             binary_elementwise_subconfig,
+//             &params,
+//             &params,
+//             sizeof(params),
+//             XNN_FLAG_YIELD_WORKERS,
+//             threadpool);
+//           if (status != xnn_status_success) {
+//             TFLITE_LOG(TFLITE_LOG_INFO,
+//                        "Failed to run xnn_run_minimum_nd_f16. Error code: %d",
+//                        status);
+//             TFLiteOperation<kernel_type, Eigen::half, OpType>(context, node,
+//                                                         op_context);
+//           }
+//         }
+//         break;
+//       }
+// #endif      
       TFLiteOperation<kernel_type, Eigen::half, OpType>(context, node, op_context);
       break;
+    }
     case kTfLiteBFloat16:
       TFLiteOperation<kernel_type, Eigen::bfloat16, OpType>(context, node, op_context);
       break;
