@@ -36,7 +36,7 @@ limitations under the License.
 
 namespace tflite {
 namespace subgraph_test_util {
-
+enum class ReduceFunction { kADD, kMUL, kMIN, kMAX, kANY, kALL, kOther };
 class SubgraphBuilder {
  public:
   ~SubgraphBuilder();
@@ -282,6 +282,9 @@ class SubgraphBuilder {
   // Build a subgraph with a single While op, that contains 3 inputs and 3
   // outputs (str1, str2, int_val).
   void BuildWhileSubgraphWithDynamicTensor(Subgraph* subgraph);
+
+  void BuildReduceSubgraph(Subgraph* subgraph, ReduceFunction reduce_function,
+                           TfLiteType type);
 
  private:
   template <typename T = int32_t>

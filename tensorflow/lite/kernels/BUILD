@@ -769,6 +769,7 @@ BUILTIN_KERNEL_SRCS = [
     "stablehlo_composite.cc",
     "stablehlo_multiply.cc",
     "stablehlo_pad.cc",
+    "stablehlo_reduce.cc",
     "stablehlo_reduce_window.cc",
     "stablehlo_min_max.cc",
     "stablehlo_scatter.cc",
@@ -1360,6 +1361,7 @@ cc_test(
     ],
 )
 
+
 cc_test(
     name = "stablehlo_pad_test",
     srcs = ["stablehlo_pad_test.cc"],
@@ -1403,6 +1405,28 @@ cc_test(
 cc_test(
     name = "stablehlo_reduce_window_test",
     srcs = ["stablehlo_reduce_window_test.cc"],
+    tags = ["tflite_nnapi"],
+    deps = [
+        ":stablehlo_reduce_window_test_util",
+        ":subgraph_test_util",
+        ":test_main",
+        ":test_util",
+        "//tensorflow/lite/c:c_api_types",
+        "//tensorflow/lite/core/c:common",
+        "//tensorflow/lite/schema:schema_fbs",
+        "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/random:bit_gen_ref",
+        "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "stablehlo_reduce_test",
+    srcs = ["stablehlo_reduce_test.cc"],
     tags = ["tflite_nnapi"],
     deps = [
         ":stablehlo_reduce_window_test_util",

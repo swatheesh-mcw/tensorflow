@@ -21,7 +21,7 @@ limitations under the License.
 #include <memory>
 
 #include "flatbuffers/flatbuffers.h"  // from @flatbuffers
-#include "flatbuffers/vector.h"  // from @flatbuffers
+#include "flatbuffers/vector.h"       // from @flatbuffers
 #include "tensorflow/lite/core/api/error_reporter.h"
 #include "tensorflow/lite/core/c/builtin_op_data.h"
 #include "tensorflow/lite/core/c/common.h"
@@ -938,7 +938,9 @@ TfLiteStatus ParseOpDataTfLite(const Operator* op, BuiltinOperator op_type,
     case BuiltinOperator_STABLEHLO_CLAMP:
     case BuiltinOperator_STABLEHLO_CONCATENATE:
     case BuiltinOperator_STABLEHLO_CUSTOM_CALL:
-    case BuiltinOperator_STABLEHLO_REDUCE:
+    case BuiltinOperator_STABLEHLO_REDUCE: {
+      return ParseStablehloReduce(op, error_reporter, allocator, builtin_data);
+    }
     case BuiltinOperator_STABLEHLO_ABS:
     case BuiltinOperator_STABLEHLO_AND:
     case BuiltinOperator_STABLEHLO_COSINE:
@@ -2107,6 +2109,45 @@ TfLiteStatus ParseResizeNearestNeighbor(const Operator* op,
 
   *builtin_data = params.release();
   return kTfLiteOk;
+}
+
+TfLiteStatus ParseStablehloReduce(const Operator* op,
+                                ErrorReporter* error_reporter,
+                                BuiltinDataAllocator* allocator,
+                                void** builtin_data) {
+  CheckParsePointerParams(op, error_reporter, allocator, builtin_data);
+  SafeBuiltinDataAllocator safe_allocator(allocator);
+  auto params = safe_allocator.Allocate<TfLiteStablehloReduceParams>();
+  const StablehloReduceOptions* schema_params =
+      op->builtin_options_2_as_StablehloReduceOptions();
+  if (schema_params) {
+      auto LoadAttr =
+        [&error_reporter](
+            int64_t* params_array, const size_t params_array_size_bytes,
+            const flatbuffers::Vector<int64_t>* const flatbuffer_vector,
+            const char* const attr_name) -> TfLiteStatus {
+      TfLiteStatus status = FlatBufferIntVectorToArray(
+          params_array_size_bytes, flatbuffer_vector, params_array,
+          error_reporter, "stablehlo.reduce");
+      if (status != kTfLiteOk) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Check the '%s' attribute.",
+                             attr_name);
+      }
+      return status;
+    };
+   TF_LITE_ENSURE_STATUS(
+        LoadAttr(params->dimensions, sizeof(params->dimensions),
+                 schema_params->dimensions(), "dimensions"));
+    params->num_dimensions =
+          schema_params->dimensions()->size();
+    params->body_subgraph_index =
+        schema_params->body_subgraph_index();
+    *builtin_data = params.release();
+    return kTfLiteOk;
+  }
+  TF_LITE_REPORT_ERROR(error_reporter,
+                       "Could not get 'stablehlo.reduce' operation parameters.");
+  return kTfLiteError;
 }
 
 TfLiteStatus ParseStablehloReduceWindow(const Operator* op,

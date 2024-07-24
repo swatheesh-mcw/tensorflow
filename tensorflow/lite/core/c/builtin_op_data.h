@@ -36,6 +36,7 @@ extern "C" {
 #define TFLITE_STABLEHLO_SCATTER_PARAMS_MAX_DIMENSION_COUNT 8
 #define TFLITE_STABLEHLO_GATHER_PARAMS_MAX_DIMENSION_COUNT 8
 #define TFLITE_STABLEHLO_REDUCE_WINDOW_PARAMS_MAX_DIMENSION_COUNT 8
+#define TFLITE_STABLEHLO_REDUCE_PARAMS_MAX_DIMENSION_COUNT 8
 #define TFLITE_STABLEHLO_PAD_PARAMS_MAX_DIMENSION_COUNT 8
 
 // TODO(aselle): Consider using "if this then that" for testing.
@@ -653,6 +654,28 @@ typedef struct {
   const uint8_t* attributes;
   size_t attributes_size;
 } TfLiteStablehloCompositeParams;
+
+typedef struct {
+  // See the stablehlo spec for the explanation of the attributes:
+  // https://github.com/openxla/stablehlo/blob/main/docs/spec.md#reduce
+  int64_t dimensions[TFLITE_STABLEHLO_REDUCE_PARAMS_MAX_DIMENSION_COUNT];
+  int64_t num_dimensions;
+  int body_subgraph_index;
+} TfLiteStablehloReduceParams;
+
+enum TfLiteReduceFunction {
+  TfLiteReduceFunctionUnsupported,
+  TfLiteReduceFunctionAdd,
+  TfLiteReduceFunctionMul,
+  TfLiteReduceFunctionMin,
+  TfLiteReduceFunctionMax,
+  TfLiteReduceFunctionAll,
+  TfLiteReduceFunctionAny
+};
+
+typedef struct {
+  enum TfLiteReduceFunction reduce_function;
+} TfLiteReduceParams;
 
 #ifdef __cplusplus
 }  // extern "C"

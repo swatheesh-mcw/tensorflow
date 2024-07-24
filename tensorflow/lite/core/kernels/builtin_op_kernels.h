@@ -234,8 +234,8 @@ Register_STABLEHLO_SLICE();  // WARNING: not implemented, using this
 TfLiteRegistration*
 Register_STABLEHLO_CUSTOM_CALL();  // WARNING: not implemented, using this
                                    // op will crash the runtime
-TfLiteRegistration*
-Register_STABLEHLO_REDUCE();  // WARNING: not implemented, using this
+
+TfLiteRegistration* Register_STABLEHLO_REDUCE();  // WARNING: not implemented, using this
                               // op will crash the runtime
 TfLiteRegistration*
 Register_STABLEHLO_ABS();  // WARNING: not implemented, using this

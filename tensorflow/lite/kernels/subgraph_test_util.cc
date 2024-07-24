@@ -165,6 +165,48 @@ void AddAddNode(Subgraph* subgraph, int input0, int input1, int output) {
                                   add_params, add_reg, &node_index);
 }
 
+void AddMulNode(Subgraph* subgraph, int input0, int input1, int output) {
+  int node_index;
+  TfLiteMulParams* mul_params =
+      reinterpret_cast<TfLiteMulParams*>(calloc(1, sizeof(TfLiteMulParams)));
+  auto* mul_reg = ops::builtin::Register_MUL();
+  mul_reg->builtin_code = kTfLiteBuiltinMul;
+  subgraph->AddNodeWithParameters({input0, input1}, {output}, {}, nullptr, 0,
+                                  mul_params, mul_reg, &node_index);
+}
+
+void AddMaxNode(Subgraph* subgraph, int input0, int input1, int output) {
+  int node_index;
+  auto* maximum_reg = ops::builtin::Register_MAXIMUM();
+  maximum_reg->builtin_code = kTfLiteBuiltinMaximum;
+  subgraph->AddNodeWithParameters({input0, input1}, {output}, {}, nullptr, 0,
+                                  nullptr, maximum_reg, &node_index);
+}
+
+void AddMinNode(Subgraph* subgraph, int input0, int input1, int output) {
+  int node_index;
+  auto* minimum_reg = ops::builtin::Register_MINIMUM();
+  minimum_reg->builtin_code = kTfLiteBuiltinMinimum;
+  subgraph->AddNodeWithParameters({input0, input1}, {output}, {}, nullptr, 0,
+                                  nullptr, minimum_reg, &node_index);
+}
+
+void AddLogicalAndNode(Subgraph* subgraph, int input0, int input1, int output) {
+  int node_index;
+  auto* logical_and_reg = ops::builtin::Register_LOGICAL_AND();
+  logical_and_reg->builtin_code = kTfLiteBuiltinLogicalAnd;
+  subgraph->AddNodeWithParameters({input0, input1}, {output}, {}, nullptr, 0,
+                                  nullptr, logical_and_reg, &node_index);
+}
+
+void AddLogicalOrNode(Subgraph* subgraph, int input0, int input1, int output) {
+  int node_index;
+  auto* logical_or_reg = ops::builtin::Register_LOGICAL_OR();
+  logical_or_reg->builtin_code = kTfLiteBuiltinLogicalOr;
+  subgraph->AddNodeWithParameters({input0, input1}, {output}, {}, nullptr, 0,
+                                  nullptr, logical_or_reg, &node_index);
+}
+
 // Add a DYNAMIC_UPDATE_SLICE node to the subgraph.
 void AddDynamicUpdateSliceNode(Subgraph* subgraph, int input0, int input1,
                                int input2, int output) {
@@ -2012,6 +2054,49 @@ void SubgraphBuilder::BuildWhileSubgraphWithDynamicTensor(Subgraph* subgraph) {
       {kStringInput1, kStringInput2, kIntegerInput},
       {kStringOutput1, kStringOutput2, kIntegerOutput}, {}, nullptr, 0, params,
       while_reg, &node_index);
+}
+
+void SubgraphBuilder::BuildReduceSubgraph(Subgraph* subgraph,
+                                          ReduceFunction reduce_function,
+                                          TfLiteType type) {
+  enum { kInput, kInitValue, kOutput, kTensorCount };
+
+  int first_new_tensor_index;
+  ASSERT_EQ(subgraph->AddTensors(kTensorCount, &first_new_tensor_index),
+            kTfLiteOk);
+  ASSERT_EQ(first_new_tensor_index, 0);
+  // ASSERT_EQ(subgraph->SetInputs(inputs), kTfLiteOk);
+  ASSERT_EQ(subgraph->SetInputs({kInput, kInitValue}), kTfLiteOk);
+  ASSERT_EQ(subgraph->SetOutputs({kOutput}), kTfLiteOk);
+
+  for (int i = 0; i < kTensorCount; ++i) {
+    SetupTensor(subgraph, i, type);
+  }
+  switch (reduce_function) {
+    case ReduceFunction::kADD:
+      AddAddNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    case ReduceFunction::kMUL:
+      AddMulNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    case ReduceFunction::kMIN:
+      AddMinNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    case ReduceFunction::kMAX:
+      AddMaxNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    case ReduceFunction::kALL:
+      AddLogicalAndNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    case ReduceFunction::kANY:
+      AddLogicalOrNode(subgraph, kInput, kInitValue, kOutput);
+      break;
+    default:
+      TF_LITE_FATAL(
+          "Unsupported condition direction. Supported Direction are 'kADD', "
+          "'kMUL', 'kMAX', 'kMIN', 'kALL', 'kANY'.");
+      break;
+  }
 }
 
 void FillIntTensor(TfLiteTensor* tensor, const std::vector<int32_t>& data) {
