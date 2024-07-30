@@ -69,17 +69,18 @@ class RangeOpModel : public SingleOpModel {
   std::vector<int> GetOutputShape() { return GetTensorShape(output_); }
   int output() const { return output_; }
 
-  std::vector<T> ExtractDequantVector(int index) {
+  template <typename output_type>
+  std::vector<output_type> ExtractDequantVector(int index) {
     auto vec = ExtractVector<T>(index);
     TfLiteTensor* t = interpreter_->tensor(index);
     auto* affine_quantization =
         reinterpret_cast<TfLiteAffineQuantization*>(t->quantization.params);
     float scaling_factor = affine_quantization->scale->data[0];
     int zero_point = affine_quantization->zero_point->data[0];
-    std::vector<T> output;
+    std::vector<output_type> output;
     for (const auto& v : vec) {
-      output.push_back(
-          static_cast<T>((static_cast<T>(v) - zero_point) * scaling_factor));
+      output.push_back(static_cast<output_type>(
+          (static_cast<output_type>(v) - zero_point) * scaling_factor));
     }
     return output;
   }
@@ -90,6 +91,15 @@ class RangeOpModel : public SingleOpModel {
   int delta_;
   int output_;
 };
+
+// for quantized, the error shouldn't exceed step
+template <typename T>
+float GetTolerance(float min, float max) {
+  float kQuantizedStep =
+      2.0 * (max - min) /
+      (std::numeric_limits<T>::max() - std::numeric_limits<T>::min());
+  return kQuantizedStep;
+}
 
 TEST(RangeOpModel, Simple) {
   RangeOpModel<int32_t> model(TensorType_INT32);
@@ -278,17 +288,19 @@ TEST(RangeOpModel, Int64EmptyOutputConst) {
   EXPECT_THAT(model.GetOutput(), ElementsAre());
 }
 
-TEST(RangeOpModel, SimpleInt8) {
-  RangeOpModel<int8_t> model({TensorType_INT8, {}, 0, 128},
-                             {TensorType_INT8, {}, 0, 128},
-                             {TensorType_INT8, {}, 0, 128});
-  model.QuantizeAndPopulate<int8_t>(model.start(), {0});
-  model.QuantizeAndPopulate<int8_t>(model.limit(), {4});
-  model.QuantizeAndPopulate<int8_t>(model.delta(), {1});
+TEST(RangeOpModel, SimpleInt8Quantized) {
+  float kQuantizedTolerance = GetTolerance<int8_t>(-0.0f, 128.0f);
+  RangeOpModel<int8_t> model({TensorType_INT8, {}, 0.0f, 128.0f},
+                             {TensorType_INT8, {}, 0.0f, 128.0f},
+                             {TensorType_INT8, {}, 0.0f, 128.0f});
+  model.QuantizeAndPopulate<int8_t>(model.start(), {0.0f});
+  model.QuantizeAndPopulate<int8_t>(model.limit(), {4.0f});
+  model.QuantizeAndPopulate<int8_t>(model.delta(), {1.5f});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
-  EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
-  EXPECT_THAT(model.ExtractDequantVector(model.output()),
-              ElementsAre(0, 1, 2, 3));
+  EXPECT_THAT(model.GetOutputShape(), ElementsAre(3));
+  EXPECT_THAT(
+      model.ExtractDequantVector<float>(model.output()),
+      ElementsAreArray(ArrayFloatNear({0.0, 1.5, 3.0}, kQuantizedTolerance)));
 }
 
 TEST(RangeOpModel, SimpleInt16) {
@@ -333,7 +345,7 @@ TEST(RangeOpModel, Int8DeltaGreaterThanOneConst) {
   model.QuantizeAndPopulate<int8_t>(model.delta(), {2});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
   EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
-  EXPECT_THAT(model.ExtractDequantVector(model.output()),
+  EXPECT_THAT(model.ExtractDequantVector<int8_t>(model.output()),
               ElementsAre(2, 4, 6, 8));
 }
 
@@ -346,7 +358,7 @@ TEST(RangeOpModel, Int16QuantizedDeltaGreaterThanOneConst) {
   model.QuantizeAndPopulate<int16_t>(model.delta(), {2});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
   EXPECT_THAT(model.GetOutputShape(), ElementsAre(4));
-  EXPECT_THAT(model.ExtractDequantVector(model.output()),
+  EXPECT_THAT(model.ExtractDequantVector<int16_t>(model.output()),
               ElementsAre(2, 4, 6, 8));
 }
 
@@ -386,7 +398,8 @@ TEST(RangeOpModel, Int8EmptyOutputConst) {
   model.QuantizeAndPopulate<int8_t>(model.delta(), {1});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
   EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
-  EXPECT_THAT(model.ExtractDequantVector(model.output()), ElementsAre());
+  EXPECT_THAT(model.ExtractDequantVector<int8_t>(model.output()),
+              ElementsAre());
 }
 
 TEST(RangeOpModel, Int16EmptyOutputConstExample1) {
@@ -398,7 +411,8 @@ TEST(RangeOpModel, Int16EmptyOutputConstExample1) {
   model.QuantizeAndPopulate<int16_t>(model.delta(), {1});
   ASSERT_EQ(model.Invoke(), kTfLiteOk);
   EXPECT_THAT(model.GetOutputShape(), ElementsAre(0));
-  EXPECT_THAT(model.ExtractDequantVector(model.output()), ElementsAre());
+  EXPECT_THAT(model.ExtractDequantVector<int16_t>(model.output()),
+              ElementsAre());
 }
 
 TEST(RangeOpModel, Int16EmptyOutputConstExample2) {

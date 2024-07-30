@@ -43,15 +43,15 @@ struct OpData {
 };
 
 template <typename T>
-T dequantize_value(const TfLiteTensor* input) {
+float dequantize_value(const TfLiteTensor* input) {
   const T quantized_input_value = *GetTensorData<T>(input);
   int32_t zero_point = input->params.zero_point;
   const double scale = input->params.scale;
-  return static_cast<T>(scale * (quantized_input_value - zero_point));
+  return (scale * (quantized_input_value - zero_point));
 }
 
 template <typename T>
-T quantize_value(const T value, const double scale, int32_t zero_point) {
+T quantize_value(const float value, const double scale, int32_t zero_point) {
   static constexpr int32_t min_val = std::numeric_limits<T>::min();
   static constexpr int32_t max_val = std::numeric_limits<T>::max();
 
@@ -82,9 +82,9 @@ template <typename T>
 TfLiteStatus GetSizeQuantized(TfLiteContext* context, const TfLiteTensor* start,
                               const TfLiteTensor* limit,
                               const TfLiteTensor* delta, int* size) {
-  const T dequantized_start_value = dequantize_value<T>(start);
-  const T dequantized_delta_value = dequantize_value<T>(delta);
-  const T dequantized_limit_value = dequantize_value<T>(limit);
+  const float dequantized_start_value = dequantize_value<T>(start);
+  const float dequantized_delta_value = dequantize_value<T>(delta);
+  const float dequantized_limit_value = dequantize_value<T>(limit);
 
   TF_LITE_ENSURE(context, !(dequantized_delta_value == 0));
   TF_LITE_ENSURE(context,
@@ -189,13 +189,13 @@ void CalculateRangeQuantized(const TfLiteTensor* start,
   int32_t zero_point = start->params.zero_point;
   const double scale = start->params.scale;
 
-  const T dequantized_start_value = dequantize_value<T>(start);
-  const T dequantized_delta_value = dequantize_value<T>(delta);
+  const float dequantized_start_value = dequantize_value<T>(start);
+  const float dequantized_delta_value = dequantize_value<T>(delta);
 
   T* output_data = GetTensorData<T>(output);
 
   const int num_elements = NumElements(output);
-  T value = dequantized_start_value;
+  float value = dequantized_start_value;
   for (int i = 0; i < num_elements; ++i) {
     output_data[i] = quantize_value<T>(value, scale, zero_point);
     value += dequantized_delta_value;
