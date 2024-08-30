@@ -15,7 +15,8 @@ limitations under the License.
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+
+#include <cstdint>
 #include <limits>
 #include <numeric>
 
@@ -367,14 +368,14 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
       body_subgraph_input->quantization.params = affine_quantization;
     }
   }
-  TfLiteTensor* subgraph_output =
+  TfLiteTensor* body_subgraph_output =
       body_subgraph->tensor(body_subgraph->outputs()[0]);
-  subgraph_output->params = output->params;
+  body_subgraph_output->params = output->params;
 
   if (input->type == kTfLiteInt16 &&
       input->quantization.type != kTfLiteNoQuantization) {
-    TfLiteQuantizationFree(&subgraph_output->quantization);
-    subgraph_output->quantization.type = kTfLiteAffineQuantization;
+    TfLiteQuantizationFree(&body_subgraph_output->quantization);
+    body_subgraph_output->quantization.type = kTfLiteAffineQuantization;
     auto* affine_quantization = reinterpret_cast<TfLiteAffineQuantization*>(
         malloc(sizeof(TfLiteAffineQuantization)));
     affine_quantization->quantized_dimension = 0;
@@ -382,7 +383,7 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
     affine_quantization->zero_point = TfLiteIntArrayCreate(1);
     affine_quantization->scale->data[0] = input->params.scale;
     affine_quantization->zero_point->data[0] = input->params.zero_point;
-    subgraph_output->quantization.params = affine_quantization;
+    body_subgraph_output->quantization.params = affine_quantization;
   }
 
   TF_LITE_ENSURE_OK(context, body_subgraph->AllocateTensors());

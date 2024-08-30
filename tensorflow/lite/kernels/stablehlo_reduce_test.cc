@@ -16,7 +16,6 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 #include <initializer_list>
-#include <iostream>
 #include <vector>
 
 #include "Eigen/Core"
@@ -229,7 +228,7 @@ using TestTypes = ::testing::Types<int16_t, int32_t, int64_t>;
 
 TYPED_TEST_SUITE(StablehloReduceTestInt, TestTypes);
 
-TYPED_TEST(StablehloReduceTestInt, ReduceIntAddExample1) {
+TYPED_TEST(StablehloReduceTestInt, ReduceIntAdd) {
   using Int = typename TestFixture::IntType;
   ReduceFunction reduce_function = ReduceFunction::kADD;
   TfLiteStablehloReduceParams params = {{2},  // dimensions
@@ -247,7 +246,7 @@ TYPED_TEST(StablehloReduceTestInt, ReduceIntAddExample1) {
   EXPECT_THAT(model.GetOutput<Int>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestInt, ReduceIntMulExample1) {
+TYPED_TEST(StablehloReduceTestInt, ReduceIntMul) {
   using Int = typename TestFixture::IntType;
   ReduceFunction reduce_function = ReduceFunction::kMUL;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -265,7 +264,7 @@ TYPED_TEST(StablehloReduceTestInt, ReduceIntMulExample1) {
   EXPECT_THAT(model.GetOutput<Int>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestInt, ReduceIntMinExample1) {
+TYPED_TEST(StablehloReduceTestInt, ReduceIntMin) {
   using Int = typename TestFixture::IntType;
   ReduceFunction reduce_function = ReduceFunction::kMIN;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -283,7 +282,7 @@ TYPED_TEST(StablehloReduceTestInt, ReduceIntMinExample1) {
   EXPECT_THAT(model.GetOutput<Int>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestInt, ReduceIntMaxExample1) {
+TYPED_TEST(StablehloReduceTestInt, ReduceIntMax) {
   using Int = typename TestFixture::IntType;
   ReduceFunction reduce_function = ReduceFunction::kMAX;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -311,7 +310,7 @@ using FloatTestTypes = ::testing::Types<float>;
 
 TYPED_TEST_SUITE(StablehloReduceTestFloat, FloatTestTypes);
 
-TYPED_TEST(StablehloReduceTestFloat, ReduceFloatAddExample1) {
+TYPED_TEST(StablehloReduceTestFloat, ReduceFloatAdd) {
   using Float = typename TestFixture::FloatType;
   ReduceFunction reduce_function = ReduceFunction::kADD;
   TfLiteStablehloReduceParams params = {{2},  // dimensions
@@ -331,7 +330,7 @@ TYPED_TEST(StablehloReduceTestFloat, ReduceFloatAddExample1) {
   EXPECT_THAT(model.GetOutput<Float>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMulExample1) {
+TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMul) {
   using Float = typename TestFixture::FloatType;
   ReduceFunction reduce_function = ReduceFunction::kMUL;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -352,7 +351,7 @@ TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMulExample1) {
   EXPECT_THAT(model.GetOutput<Float>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMinExample1) {
+TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMin) {
   using Float = typename TestFixture::FloatType;
   ReduceFunction reduce_function = ReduceFunction::kMIN;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -373,7 +372,7 @@ TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMinExample1) {
   EXPECT_THAT(model.GetOutput<Float>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMaxExample1) {
+TYPED_TEST(StablehloReduceTestFloat, ReduceFloatMax) {
   using Float = typename TestFixture::FloatType;
   ReduceFunction reduce_function = ReduceFunction::kMAX;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -404,7 +403,7 @@ using BoolTestTypes = ::testing::Types<bool>;
 
 TYPED_TEST_SUITE(StablehloReduceTestBool, BoolTestTypes);
 
-TYPED_TEST(StablehloReduceTestBool, ReduceBoolAnyExample1) {
+TYPED_TEST(StablehloReduceTestBool, ReduceBoolAny) {
   using Bool = typename TestFixture::BoolType;
   ReduceFunction reduce_function = ReduceFunction::kANY;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -423,7 +422,7 @@ TYPED_TEST(StablehloReduceTestBool, ReduceBoolAnyExample1) {
   EXPECT_THAT(model.GetOutput<Bool>(), ElementsAreArray(expected_values));
 }
 
-TYPED_TEST(StablehloReduceTestBool, ReduceBoolAllExample1) {
+TYPED_TEST(StablehloReduceTestBool, ReduceBoolAll) {
   using Bool = typename TestFixture::BoolType;
   ReduceFunction reduce_function = ReduceFunction::kALL;
   TfLiteStablehloReduceParams params = {{1, 0},  // dimensions
@@ -453,7 +452,7 @@ using QuantizedTestTypes = ::testing::Types<int8_t>;
 
 TYPED_TEST_SUITE(StablehloReduceQuantizedTestInt, QuantizedTestTypes);
 
-TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntProdExample1) {
+TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntProd) {
   using QuantizedInt = typename TestFixture::QuantizedIntType;
   float kQuantizedTolerance = GetTolerance<QuantizedInt>(0.0f, 128.0f);
   ReduceFunction reduce_function = ReduceFunction::kMUL;
@@ -476,7 +475,7 @@ TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntProdExample1) {
           {10.0f, 22.0f, 36.0f, 52.0f, 70.0f, 90.0f}, kQuantizedTolerance)));
 }
 
-TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntAddExample1) {
+TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntAdd) {
   using QuantizedInt = typename TestFixture::QuantizedIntType;
   float kQuantizedTolerance = GetTolerance<QuantizedInt>(0.0f, 128.0f);
   ReduceFunction reduce_function = ReduceFunction::kADD;
@@ -499,7 +498,7 @@ TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntAddExample1) {
           {11.0f, 13.0f, 15.0f, 17.0f, 19.0f, 21.0f}, kQuantizedTolerance)));
 }
 
-TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMinExample1) {
+TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMin) {
   using QuantizedInt = typename TestFixture::QuantizedIntType;
   float kQuantizedTolerance = GetTolerance<QuantizedInt>(-127.0f, 128.0f);
   ReduceFunction reduce_function = ReduceFunction::kMIN;
@@ -521,7 +520,7 @@ TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMinExample1) {
                   {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, kQuantizedTolerance)));
 }
 
-TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMaxExample1) {
+TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMax) {
   using QuantizedInt = typename TestFixture::QuantizedIntType;
   float kQuantizedTolerance = GetTolerance<QuantizedInt>(0.0f, 128.0f);
   ReduceFunction reduce_function = ReduceFunction::kMAX;
@@ -544,7 +543,7 @@ TYPED_TEST(StablehloReduceQuantizedTestInt, ReduceQuantizedIntMaxExample1) {
           {10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f}, kQuantizedTolerance)));
 }
 
-TEST(ReduceOpModelTest, ReduceQuantizedInt16AddExample1) {
+TEST(ReduceOpModelTest, ReduceQuantizedInt16Add) {
   float kQuantizedTolerance = GetTolerance<int16_t>(-127.0f, 127.0f);
   ReduceFunction reduce_function = ReduceFunction::kADD;
   TfLiteStablehloReduceParams params = {{1},  // dimensions
@@ -566,7 +565,7 @@ TEST(ReduceOpModelTest, ReduceQuantizedInt16AddExample1) {
           {11.0f, 13.0f, 15.0f, 17.0f, 19.0f, 21.0f}, kQuantizedTolerance)));
 }
 
-TEST(ReduceOpModelTest, ReduceQuantizedInt16ProdExample1) {
+TEST(ReduceOpModelTest, ReduceQuantizedInt16Prod) {
   float kQuantizedTolerance = GetTolerance<int16_t>(-127.0f, 127.0f);
   ReduceFunction reduce_function = ReduceFunction::kMUL;
   TfLiteStablehloReduceParams params = {{1},  // dimensions
@@ -588,7 +587,7 @@ TEST(ReduceOpModelTest, ReduceQuantizedInt16ProdExample1) {
           {10.0f, 22.0f, 36.0f, 52.0f, 70.0f, 90.0f}, kQuantizedTolerance)));
 }
 
-TEST(ReduceOpModelTest, ReduceQuantizedInt16MinExample1) {
+TEST(ReduceOpModelTest, ReduceQuantizedInt16Min) {
   float kQuantizedTolerance = GetTolerance<int16_t>(-127.0f, 127.0f);
   ReduceFunction reduce_function = ReduceFunction::kMIN;
   TfLiteStablehloReduceParams params = {{1},  // dimensions
@@ -609,7 +608,7 @@ TEST(ReduceOpModelTest, ReduceQuantizedInt16MinExample1) {
                   {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, kQuantizedTolerance)));
 }
 
-TEST(ReduceOpModelTest, ReduceQuantizedInt16MaxExample1) {
+TEST(ReduceOpModelTest, ReduceQuantizedInt16Max) {
   float kQuantizedTolerance = GetTolerance<int16_t>(-127.0f, 127.0f);
   ReduceFunction reduce_function = ReduceFunction::kMAX;
   TfLiteStablehloReduceParams params = {{1},  // dimensions

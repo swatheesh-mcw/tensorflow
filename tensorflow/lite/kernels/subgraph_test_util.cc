@@ -2065,7 +2065,6 @@ void SubgraphBuilder::BuildReduceSubgraph(Subgraph* subgraph,
   ASSERT_EQ(subgraph->AddTensors(kTensorCount, &first_new_tensor_index),
             kTfLiteOk);
   ASSERT_EQ(first_new_tensor_index, 0);
-  // ASSERT_EQ(subgraph->SetInputs(inputs), kTfLiteOk);
   ASSERT_EQ(subgraph->SetInputs({kInput, kInitValue}), kTfLiteOk);
   ASSERT_EQ(subgraph->SetOutputs({kOutput}), kTfLiteOk);
 
